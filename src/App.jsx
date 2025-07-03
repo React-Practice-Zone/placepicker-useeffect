@@ -1,23 +1,36 @@
 import { useRef, useState } from "react";
 
-import Places from "./components/Places.jsx";
-import { AVAILABLE_PLACES } from "./data.util.js";
-import Modal from "./components/Modal.jsx";
-import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
+import Places from "./components/Places";
+import Modal from "./components/Modal";
+import DeleteConfirmation from "./components/DeleteConfirmation";
+import { AVAILABLE_PLACES } from "./data.util";
+import { sortPlacesByDistance } from "./utils/location-calculation.util";
 
 function App() {
-  const modal = useRef();
-  const selectedPlace = useRef();
+  const modalRef = useRef();
+  const selectedPlaceRef = useRef();
+
+  const [availablePlaces, setAvailablePlaces] = useState([]);
   const [pickedPlaces, setPickedPlaces] = useState([]);
 
+  navigator.geolocation.getCurrentPosition((position) => {
+    const sortedPlaces = sortPlacesByDistance(
+      AVAILABLE_PLACES,
+      position.coords.latitude,
+      position.coords.longitude
+    );
+
+    setAvailablePlaces(sortedPlaces);
+  });
+
   function handleStartRemovePlace(id) {
-    modal.current.open();
-    selectedPlace.current = id;
+    modalRef.current.open();
+    selectedPlaceRef.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    modalRef.current.close();
   }
 
   function handleSelectPlace(id) {
@@ -32,14 +45,14 @@ function App() {
 
   function handleRemovePlace() {
     setPickedPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
+      prevPickedPlaces.filter((place) => place.id !== selectedPlaceRef.current)
     );
-    modal.current.close();
+    modalRef.current.close();
   }
 
   return (
     <>
-      <Modal ref={modal}>
+      <Modal ref={modalRef}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
@@ -63,7 +76,7 @@ function App() {
         />
         <Places
           title="Available Places"
-          places={AVAILABLE_PLACES}
+          places={availablePlaces}
           onSelectPlace={handleSelectPlace}
         />
       </main>
