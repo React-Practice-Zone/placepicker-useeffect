@@ -10,7 +10,6 @@ import { sortPlacesByDistance } from "./utils/location-calculation.util";
 function App() {
   const modalRef = useRef();
   const selectedPlaceRef = useRef();
-
   const [availablePlaces, setAvailablePlaces] = useState([]);
   const [pickedPlaces, setPickedPlaces] = useState([]);
 
@@ -26,16 +25,16 @@ function App() {
     });
   }, []);
 
-  function handleStartRemovePlace(id) {
+  function startRemovePlace(id) {
     modalRef.current.open();
     selectedPlaceRef.current = id;
   }
 
-  function handleStopRemovePlace() {
+  function stopRemovePlace() {
     modalRef.current.close();
   }
 
-  function handleSelectPlace(id) {
+  function selectPlace(id) {
     setPickedPlaces((prevPickedPlaces) => {
       if (prevPickedPlaces.some((place) => place.id === id)) {
         return prevPickedPlaces;
@@ -43,9 +42,15 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+
+    const storedIds = JSON.parse(localStorage.getItem("picked-places")) || [];
+
+    if (storedIds.indexOf(id) === -1) {
+      localStorage.setItem("picked-places", JSON.stringify([id, ...storedIds]));
+    }
   }
 
-  function handleRemovePlace() {
+  function removePlace() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlaceRef.current)
     );
@@ -56,8 +61,8 @@ function App() {
     <>
       <Modal ref={modalRef}>
         <DeleteConfirmation
-          onCancel={handleStopRemovePlace}
-          onConfirm={handleRemovePlace}
+          onCancel={stopRemovePlace}
+          onConfirm={removePlace}
         />
       </Modal>
 
@@ -74,13 +79,13 @@ function App() {
           title="I'd like to visit ..."
           fallbackText={"Select the places you would like to visit below."}
           places={pickedPlaces}
-          onSelectPlace={handleStartRemovePlace}
+          onSelectPlace={startRemovePlace}
         />
         <Places
           title="Available Places"
           fallbackText={"Sorting places by distance..."}
           places={availablePlaces}
-          onSelectPlace={handleSelectPlace}
+          onSelectPlace={selectPlace}
         />
       </main>
     </>
